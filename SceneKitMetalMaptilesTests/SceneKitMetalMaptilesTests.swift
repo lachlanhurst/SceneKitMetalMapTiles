@@ -27,6 +27,18 @@ class SceneKitMetalMaptilesTests: XCTestCase {
         print()
         mtm.shiftMapTiles(dX: 1, dY: 0)
         print(mtm.description)
+        print()
+        mtm.shiftMapTiles(dX: 1, dY: 0)
+        print(mtm.description)
+        print()
+        mtm.shiftMapTiles(dX: 0, dY: 1)
+        print(mtm.description)
+        print()
+        mtm.shiftMapTiles(dX: 1, dY: 1)
+        print(mtm.description)
+        print()
+        mtm.shiftMapTiles(dX: -1, dY: -1)
+        print(mtm.description)
     }
 
     func testMapTileForLocation() {

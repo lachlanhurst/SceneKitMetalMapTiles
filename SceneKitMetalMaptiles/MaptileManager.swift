@@ -63,8 +63,9 @@ class MaptileManager {
             let newCentreMt = mapTileForLocation(location: newLocation, zoom: zoomLevel)
             if newCentreMt != mapTileCentre {
                 //then grid needs update
-                let dX = newCentreMt.xIndex - mapTileCentre.xIndex
-                let dY = newCentreMt.yIndex - mapTileCentre.yIndex
+                let dX = mapTileCentre.xIndex - newCentreMt.xIndex
+                let dY = mapTileCentre.yIndex - newCentreMt.yIndex
+                shiftMapTiles(dX: dX, dY: dY)
             }
             _globalLocation = newLocation
         }
@@ -75,12 +76,31 @@ class MaptileManager {
 
         for i in 0..<gridSize {
             for j in 0..<gridSize {
-                let oldMt = mapTiles[i][j]
-                let newXindex = i + dX
-                let newYindex = j + dY
-                if newXindex >= 0 && newXindex < gridSize && newYindex >= 0 && newYindex < gridSize {
-                    newMapTiles[newXindex][newYindex] = oldMt
+                let oldXindex = i + dX
+                let oldYindex = j + dY
+                var mt:MapTile? = nil
+                if oldXindex >= 0 && oldXindex < gridSize && oldYindex >= 0 && oldYindex < gridSize {
+                    mt = mapTiles[oldXindex][oldYindex]
+                } else if oldXindex < 0 && oldYindex < 0 {
+                    let closest = mapTiles[0][0]!
+                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex - 1, yIndex: closest.yIndex - 1)
+                } else if oldXindex < 0 {
+                    let closest = mapTiles[0][oldYindex]!
+                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex - 1, yIndex: closest.yIndex)
+                } else if oldYindex < 0 {
+                    let closest = mapTiles[oldXindex][0]!
+                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex, yIndex: closest.yIndex - 1)
+                } else if oldXindex >= gridSize && oldYindex >= gridSize {
+                    let closest = mapTiles[gridSize - 1][gridSize - 1]!
+                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex + 1, yIndex: closest.yIndex + 1)
+                } else if oldXindex >= gridSize {
+                    let closest = mapTiles[gridSize - 1][oldYindex]!
+                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex + 1, yIndex: closest.yIndex)
+                } else if oldYindex >= gridSize {
+                    let closest = mapTiles[oldXindex][gridSize - 1]!
+                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex, yIndex: closest.yIndex + 1)
                 }
+                newMapTiles[i][j] = mt
             }
         }
 

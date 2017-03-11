@@ -15,6 +15,7 @@
 		73A532191E73BE6D00EEC692 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 73A532171E73BE6D00EEC692 /* LaunchScreen.storyboard */; };
 		73A532241E73BE6D00EEC692 /* SceneKitMetalMaptilesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A532231E73BE6D00EEC692 /* SceneKitMetalMaptilesTests.swift */; };
 		73A5322F1E73C08900EEC692 /* MaptileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A5322E1E73C08900EEC692 /* MaptileManager.swift */; };
+		73A532311E743EDD00EEC692 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A532301E743EDD00EEC692 /* Utils.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +41,7 @@
 		73A532231E73BE6D00EEC692 /* SceneKitMetalMaptilesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneKitMetalMaptilesTests.swift; sourceTree = "<group>"; };
 		73A532251E73BE6D00EEC692 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		73A5322E1E73C08900EEC692 /* MaptileManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MaptileManager.swift; sourceTree = "<group>"; };
+		73A532301E743EDD00EEC692 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +91,7 @@
 				73A532171E73BE6D00EEC692 /* LaunchScreen.storyboard */,
 				73A5321A1E73BE6D00EEC692 /* Info.plist */,
 				73A5322E1E73C08900EEC692 /* MaptileManager.swift */,
+				73A532301E743EDD00EEC692 /* Utils.swift */,
 			);
 			path = SceneKitMetalMaptiles;
 			sourceTree = "<group>";
@@ -211,6 +214,7 @@
 				73A532111E73BE6D00EEC692 /* GameViewController.swift in Sources */,
 				73A5320D1E73BE6D00EEC692 /* AppDelegate.swift in Sources */,
 				73A5322F1E73C08900EEC692 /* MaptileManager.swift in Sources */,
+				73A532311E743EDD00EEC692 /* Utils.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

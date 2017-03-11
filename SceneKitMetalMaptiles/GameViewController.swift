@@ -12,9 +12,13 @@ import SceneKit
 
 class GameViewController: UIViewController {
 
+    var mtm:MaptileManager!
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        mtm = MaptileManager(mapTileGridSize: 3)
+
         // create a new scene
         let scene = SCNScene()
         
@@ -41,12 +45,14 @@ class GameViewController: UIViewController {
         scene.rootNode.addChildNode(ambientLightNode)
         
         // retrieve the ship node
-        let box = SCNNode(geometry:SCNBox(width: 1, height: 1, length: 1, chamferRadius: 0))
-        scene.rootNode.addChildNode(box)
-        
+        //let box = SCNNode(geometry:SCNBox(width: 1, height: 1, length: 1, chamferRadius: 0))
+        //scene.rootNode.addChildNode(box)
         // animate the 3d object
-        box.runAction(SCNAction.repeatForever(SCNAction.rotateBy(x: 0, y: 2, z: 0, duration: 1)))
-        
+        //box.runAction(SCNAction.repeatForever(SCNAction.rotateBy(x: 0, y: 2, z: 0, duration: 1)))
+
+        let planes = planesFromMtm(mtm: mtm)
+        scene.rootNode.addChildNode(planes)
+
         // retrieve the SCNView
         let scnView = self.view as! SCNView
         
@@ -54,7 +60,7 @@ class GameViewController: UIViewController {
         scnView.scene = scene
         
         // allows the user to manipulate the camera
-        scnView.allowsCameraControl = true
+        //scnView.allowsCameraControl = true
         
         // show statistics such as fps and timing information
         scnView.showsStatistics = true
@@ -66,7 +72,30 @@ class GameViewController: UIViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         scnView.addGestureRecognizer(tapGesture)
     }
-    
+
+    func planesFromMtm(mtm:MaptileManager) -> SCNNode {
+        let node = SCNNode()
+
+        var count:Int = 0
+        for i in 0..<mtm.gridSize {
+            for j in 0..<mtm.gridSize {
+                let mt = mtm.mapTiles[j][i]!
+                let image = Utils.textToImage(mt.description, size: CGSize(width: 50, height: 50), atPoint: CGPoint(x: 0, y: 0))
+
+                let plane = SCNPlane(width: 1, height: 1)
+                plane.firstMaterial?.locksAmbientWithDiffuse = false
+                plane.firstMaterial?.diffuse.contents = image
+                plane.firstMaterial?.ambient.contents = Utils.colourForIndex(index: count)
+                let planeNode = SCNNode(geometry: plane)
+                planeNode.position = SCNVector3Make(Float(j), Float(i), 0)
+                node.addChildNode(planeNode)
+
+                count+=1
+            }
+        }
+        return node
+    }
+
     func handleTap(_ gestureRecognize: UIGestureRecognizer) {
         // retrieve the SCNView
         let scnView = self.view as! SCNView

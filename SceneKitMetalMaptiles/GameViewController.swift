@@ -10,14 +10,18 @@ import UIKit
 import QuartzCore
 import SceneKit
 
-class GameViewController: UIViewController {
+class GameViewController: UIViewController, MapTileManagerDelegate {
 
     var mtm:MaptileManager!
+
+    var planeRootNode:SCNNode!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        mtm = MaptileManager(mapTileGridSize: 3)
+        mtm = MaptileManager(mapTileGridSize: 27, tileMaker:MapTileMakerImage())
+        mtm.delegate = self
+        //mtm.shiftMapTiles(dX: 1, dY: 0)
 
         // create a new scene
         let scene = SCNScene()
@@ -28,7 +32,7 @@ class GameViewController: UIViewController {
         scene.rootNode.addChildNode(cameraNode)
         
         // place the camera
-        cameraNode.position = SCNVector3(x: 0, y: 0, z: 15)
+        cameraNode.position = SCNVector3(x: 0, y: 0, z: 10)
         
         // create and add a light to the scene
         let lightNode = SCNNode()
@@ -51,6 +55,9 @@ class GameViewController: UIViewController {
         //box.runAction(SCNAction.repeatForever(SCNAction.rotateBy(x: 0, y: 2, z: 0, duration: 1)))
 
         let planes = planesFromMtm(mtm: mtm)
+        planes.position = SCNVector3Make(Float(mtm.globalLocation.x), Float(mtm.globalLocation.y), 0)
+        beginTranslation3d = planes.position
+        planeRootNode = planes
         scene.rootNode.addChildNode(planes)
 
         // retrieve the SCNView
@@ -71,23 +78,89 @@ class GameViewController: UIViewController {
         // add a tap gesture recognizer
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         scnView.addGestureRecognizer(tapGesture)
+
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        scnView.addGestureRecognizer(panGesture)
+    }
+
+    //func updateMtm
+
+    var beginTranslation3d = SCNVector3Zero
+    func handlePan(_ recognizer: UIPanGestureRecognizer) {
+
+        let scnView = self.view as! SCNView
+        let transInView = recognizer.translation(in: scnView)
+        let transPtIn3d = scnView.unprojectPoint(SCNVector3Make(Float(transInView.x), Float(transInView.y), 0))
+        let originIn3d = scnView.unprojectPoint(SCNVector3Zero)
+
+        let transIn3d = (transPtIn3d - originIn3d) * 10.0
+
+        let totalTrans3d = beginTranslation3d + transIn3d
+
+        if (recognizer.state == .began )
+        {
+
+        } else if (recognizer.state == .ended ||
+            recognizer.state == .cancelled ||
+            recognizer.state == .failed)
+        {
+            beginTranslation3d = totalTrans3d
+        } else {
+
+            updateForNewLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
+            
+        }
+    }
+
+    func updateForNewLocation(x:Double, y:Double) {
+
+        let dXf = Float(mtm.mapTileCentre.xIndex) * mtm.mapTileGlobalSize
+        let dYf = Float(mtm.mapTileCentre.yIndex) * mtm.mapTileGlobalSize
+
+        planeRootNode.position = SCNVector3Make(Float(x) - dXf, Float(y) - dYf, 0) * -1.0
+        mtm.globalLocation = GlobalMtLocation(x: x, y: y)
+
+    }
+
+    func mapTilesShifted(dX: Int, dY: Int) {
+        //print("shifting by \(dX), \(dY)")
+        updatePlanesFromMtm(mtm: mtm)
+
+
+    }
+
+    func updatePlanesFromMtm(mtm:MaptileManager) {
+        var count:Int = 0
+        for i in 0..<mtm.gridSize {
+            for j in 0..<mtm.gridSize {
+                let mt = mtm.mapTiles[j][i]! as! MapTileImage
+                let image = mt.image
+
+                let planeNode = planeRootNode.childNodes[count]
+
+                planeNode.geometry?.firstMaterial?.diffuse.contents = image
+
+                count+=1
+            }
+        }
     }
 
     func planesFromMtm(mtm:MaptileManager) -> SCNNode {
         let node = SCNNode()
 
         var count:Int = 0
+
         for i in 0..<mtm.gridSize {
             for j in 0..<mtm.gridSize {
-                let mt = mtm.mapTiles[j][i]!
-                let image = Utils.textToImage(mt.description, size: CGSize(width: 50, height: 50), atPoint: CGPoint(x: 0, y: 0))
+                let mt = mtm.mapTiles[j][i]! as! MapTileImage
+                let image = mt.image
 
                 let plane = SCNPlane(width: 1, height: 1)
                 plane.firstMaterial?.locksAmbientWithDiffuse = false
                 plane.firstMaterial?.diffuse.contents = image
                 plane.firstMaterial?.ambient.contents = Utils.colourForIndex(index: count)
                 let planeNode = SCNNode(geometry: plane)
-                planeNode.position = SCNVector3Make(Float(j), Float(i), 0)
+                planeNode.position = SCNVector3Make(Float(j) - Float(mtm.gridSize) / 2, Float(i) - Float(mtm.gridSize) / 2, 0)
                 node.addChildNode(planeNode)
 
                 count+=1

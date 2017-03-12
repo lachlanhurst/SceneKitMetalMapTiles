@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 struct GlobalMtLocation {
     var x:Double
@@ -20,6 +21,23 @@ func ==(lhs: MapTile, rhs: MapTile) -> Bool {
 func !=(lhs: MapTile, rhs: MapTile) -> Bool {
     return lhs.zoomLevel != rhs.zoomLevel || lhs.xIndex != rhs.xIndex || lhs.yIndex != rhs.yIndex
 }
+
+protocol MapTileMaker {
+    func newMapTile(zoomLevel:Int, xIndex:Int, yIndex:Int) -> MapTile
+}
+
+class MapTileMakerDefault: MapTileMaker {
+    func newMapTile(zoomLevel: Int, xIndex: Int, yIndex: Int) -> MapTile {
+        return MapTile(zoomLevel: zoomLevel, xIndex: xIndex, yIndex: yIndex)
+    }
+}
+
+class MapTileMakerImage: MapTileMaker {
+    func newMapTile(zoomLevel: Int, xIndex: Int, yIndex: Int) -> MapTile {
+        return MapTileImage(zoomLevel: zoomLevel, xIndex: xIndex, yIndex: yIndex)
+    }
+}
+
 
 class MapTile {
     var zoomLevel:Int
@@ -37,21 +55,54 @@ class MapTile {
     }
 }
 
+class MapTileImage:MapTile {
+    var _image:UIImage?
+
+    override init(zoomLevel:Int, xIndex:Int, yIndex:Int) {
+        super.init(zoomLevel: zoomLevel, xIndex: xIndex, yIndex: yIndex)
+    }
+
+    var image:UIImage {
+        get {
+            if let img = _image {
+                return img
+            } else {
+                let img = Utils.textToImage(self.description, size: CGSize(width: 45, height: 45), atPoint: CGPoint(x: 0, y: 0))
+                _image = img
+                return img
+            }
+        }
+    }
+
+    var initialised:Bool {
+        return _image != nil
+    }
+}
+
+protocol MapTileManagerDelegate: class {
+    func mapTilesShifted(dX:Int, dY:Int)
+}
+
 class MaptileManager {
     var zoomLevel:Int
     var gridSize:Int
     var mapTiles:[[MapTile?]]
     var mapTileCentre:MapTile!
 
+    var tileMakerFactory:MapTileMaker
+
+    weak var delegate:MapTileManagerDelegate? = nil
+
     var _globalLocation:GlobalMtLocation
 
-    init(mapTileGridSize:Int) {
+    init(mapTileGridSize:Int, tileMaker:MapTileMaker) {
         assert(mapTileGridSize % 2 == 1, "mapTileGridSize must be odd number")
 
         zoomLevel = 0
         gridSize = mapTileGridSize
-        _globalLocation = GlobalMtLocation(x: 1.0, y: 0.5)
+        _globalLocation = GlobalMtLocation(x: 0.5, y: 0.5)
         mapTiles = Array(repeating:Array(repeating:nil, count:gridSize), count:gridSize)
+        tileMakerFactory = tileMaker
         setupMapTiles()
     }
 
@@ -61,10 +112,11 @@ class MaptileManager {
         }
         set(newLocation) {
             let newCentreMt = mapTileForLocation(location: newLocation, zoom: zoomLevel)
+            //print(newCentreMt.description)
             if newCentreMt != mapTileCentre {
                 //then grid needs update
-                let dX = mapTileCentre.xIndex - newCentreMt.xIndex
-                let dY = mapTileCentre.yIndex - newCentreMt.yIndex
+                let dX = newCentreMt.xIndex - mapTileCentre.xIndex
+                let dY = newCentreMt.yIndex - mapTileCentre.yIndex
                 shiftMapTiles(dX: dX, dY: dY)
             }
             _globalLocation = newLocation
@@ -83,28 +135,47 @@ class MaptileManager {
                     mt = mapTiles[oldXindex][oldYindex]
                 } else if oldXindex < 0 && oldYindex < 0 {
                     let closest = mapTiles[0][0]!
-                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex - 1, yIndex: closest.yIndex - 1)
-                } else if oldXindex < 0 {
-                    let closest = mapTiles[0][oldYindex]!
-                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex - 1, yIndex: closest.yIndex)
-                } else if oldYindex < 0 {
-                    let closest = mapTiles[oldXindex][0]!
-                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex, yIndex: closest.yIndex - 1)
+                    mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex - 1, yIndex: closest.yIndex - 1)
                 } else if oldXindex >= gridSize && oldYindex >= gridSize {
                     let closest = mapTiles[gridSize - 1][gridSize - 1]!
-                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex + 1, yIndex: closest.yIndex + 1)
+                    mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex + 1, yIndex: closest.yIndex + 1)
+
+
+                } else if oldXindex < 0 && oldYindex >= gridSize {
+                    let closest = mapTiles[0][gridSize - 1]!
+                    mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex - 1, yIndex: closest.yIndex + 1)
+
+                } else if oldXindex >= gridSize && oldYindex < 0 {
+                    let closest = mapTiles[gridSize - 1][0]!
+                    mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex + 1, yIndex: closest.yIndex - 1)
+
+
+                } else if oldXindex < 0 {
+                    let closest = mapTiles[0][oldYindex]!
+                    mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex - 1, yIndex: closest.yIndex)
+                } else if oldYindex < 0 {
+                    print("oldXindex = \(oldXindex)")
+                    let closest = mapTiles[oldXindex][0]!
+                    mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex, yIndex: closest.yIndex - 1)
                 } else if oldXindex >= gridSize {
                     let closest = mapTiles[gridSize - 1][oldYindex]!
-                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex + 1, yIndex: closest.yIndex)
+                    mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex + 1, yIndex: closest.yIndex)
                 } else if oldYindex >= gridSize {
                     let closest = mapTiles[oldXindex][gridSize - 1]!
-                    mt = MapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex, yIndex: closest.yIndex + 1)
+                    mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex, yIndex: closest.yIndex + 1)
                 }
                 newMapTiles[i][j] = mt
             }
         }
 
+        let centerIndex = (gridSize - 1) / 2
+        mapTileCentre = newMapTiles[centerIndex][centerIndex]
+
         mapTiles = newMapTiles
+
+        if let delegate = self.delegate {
+            delegate.mapTilesShifted(dX: dX, dY: dY)
+        }
     }
 
     func setupMapTiles() {
@@ -118,7 +189,7 @@ class MaptileManager {
         for x in startRange...endRange {
             var j:Int = 0
             for y in startRange...endRange {
-                let newMt = MapTile(zoomLevel: zoomLevel, xIndex: x, yIndex: y)
+                let newMt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: x, yIndex: y)
                 mapTiles[i][j] = newMt
                 if newMt == centerMt {
                     self.mapTileCentre = newMt
@@ -130,6 +201,13 @@ class MaptileManager {
 
     }
 
+    var mapTileGlobalSize:Float {
+        get {
+            let totalTileSize = pow(2, Float(zoomLevel))
+            return 1 / totalTileSize
+        }
+    }
+
     func mapTileForLocation(location:GlobalMtLocation, zoom:Int) -> MapTile {
         let totalTileSize = pow(2, Double(zoom))
         let xD = location.x * totalTileSize
@@ -138,7 +216,7 @@ class MaptileManager {
         let xIndex = Int(floor(xD))
         let yIndex = Int(floor(yD))
 
-        let mt = MapTile(zoomLevel: zoom, xIndex: xIndex, yIndex: yIndex)
+        let mt = tileMakerFactory.newMapTile(zoomLevel: zoom, xIndex: xIndex, yIndex: yIndex)
         return mt
     }
 

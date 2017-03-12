@@ -22,22 +22,14 @@ class SceneKitMetalMaptilesTests: XCTestCase {
     }
 
     func testSetupMapTiles() {
-        let mtm = MaptileManager(mapTileGridSize: 3)
+        let mtm = MaptileManager(mapTileGridSize: 3, tileMaker: MapTileMakerDefault())
         print(mtm.description)
         print()
-        mtm.shiftMapTiles(dX: 1, dY: 0)
+        mtm.shiftMapTiles(dX: 1, dY: -1)
         print(mtm.description)
+
         print()
-        mtm.shiftMapTiles(dX: 1, dY: 0)
-        print(mtm.description)
-        print()
-        mtm.shiftMapTiles(dX: 0, dY: 1)
-        print(mtm.description)
-        print()
-        mtm.shiftMapTiles(dX: 1, dY: 1)
-        print(mtm.description)
-        print()
-        mtm.shiftMapTiles(dX: -1, dY: -1)
+        mtm.shiftMapTiles(dX: -1, dY: 1)
         print(mtm.description)
     }
 
@@ -47,7 +39,7 @@ class SceneKitMetalMaptilesTests: XCTestCase {
 
         let zeroMt = MapTile(zoomLevel: 0, xIndex: 0, yIndex: 0)
 
-        let mtm = MaptileManager(mapTileGridSize: 3)
+        let mtm = MaptileManager(mapTileGridSize: 3, tileMaker: MapTileMakerDefault())
         var ltMt = mtm.mapTileForLocation(location: GlobalMtLocation(x:0,y:0), zoom: 0)
         var midMt = mtm.mapTileForLocation(location: GlobalMtLocation(x:0.5,y:0.5), zoom: 0)
         var bmMt = mtm.mapTileForLocation(location: GlobalMtLocation(x:0.5,y:0.99), zoom: 0)

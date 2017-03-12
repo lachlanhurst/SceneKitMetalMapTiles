@@ -10,16 +10,18 @@ import UIKit
 import QuartzCore
 import SceneKit
 
-class GameViewController: UIViewController, MapTileManagerDelegate {
+class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRendererDelegate {
 
     var mtm:MaptileManager!
 
     var planeRootNode:SCNNode!
 
+    var updateLocationTo:GlobalMtLocation? = nil
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        mtm = MaptileManager(mapTileGridSize: 27, tileMaker:MapTileMakerImage())
+        mtm = MaptileManager(mapTileGridSize: 15, tileMaker:MapTileMakerImage())
         mtm.delegate = self
         //mtm.shiftMapTiles(dX: 1, dY: 0)
 
@@ -62,6 +64,8 @@ class GameViewController: UIViewController, MapTileManagerDelegate {
 
         // retrieve the SCNView
         let scnView = self.view as! SCNView
+        scnView.isPlaying = true
+        scnView.delegate = self
         
         // set the scene to the view
         scnView.scene = scene
@@ -93,7 +97,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate {
         let transPtIn3d = scnView.unprojectPoint(SCNVector3Make(Float(transInView.x), Float(transInView.y), 0))
         let originIn3d = scnView.unprojectPoint(SCNVector3Zero)
 
-        let transIn3d = (transPtIn3d - originIn3d) * 10.0
+        let transIn3d = (transPtIn3d - originIn3d) * 10 // camera z pos ???
 
         let totalTrans3d = beginTranslation3d + transIn3d
 
@@ -107,26 +111,23 @@ class GameViewController: UIViewController, MapTileManagerDelegate {
             beginTranslation3d = totalTrans3d
         } else {
 
-            updateForNewLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
-            
+            //updateForNewLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
+            updateLocationTo = GlobalMtLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
         }
     }
 
     func updateForNewLocation(x:Double, y:Double) {
 
+        mtm.globalLocation = GlobalMtLocation(x: x, y: y)
         let dXf = Float(mtm.mapTileCentre.xIndex) * mtm.mapTileGlobalSize
         let dYf = Float(mtm.mapTileCentre.yIndex) * mtm.mapTileGlobalSize
 
         planeRootNode.position = SCNVector3Make(Float(x) - dXf, Float(y) - dYf, 0) * -1.0
-        mtm.globalLocation = GlobalMtLocation(x: x, y: y)
-
     }
 
     func mapTilesShifted(dX: Int, dY: Int) {
         //print("shifting by \(dX), \(dY)")
         updatePlanesFromMtm(mtm: mtm)
-
-
     }
 
     func updatePlanesFromMtm(mtm:MaptileManager) {
@@ -203,7 +204,14 @@ class GameViewController: UIViewController, MapTileManagerDelegate {
             SCNTransaction.commit()
         }
     }
-    
+
+    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        if let updateLoc = updateLocationTo {
+            updateForNewLocation(x:updateLoc.x, y:updateLoc.y)
+            updateLocationTo = nil
+        }
+    }
+
     override var shouldAutorotate: Bool {
         return true
     }

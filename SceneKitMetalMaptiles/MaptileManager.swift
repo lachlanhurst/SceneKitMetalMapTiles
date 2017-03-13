@@ -73,7 +73,8 @@ class MapTileImage:MapTile {
             if let img = _image {
                 return img
             } else {
-                let img = Utils.textToImage(self.description, size: CGSize(width: 45, height: 45), atPoint: CGPoint(x: 0, y: 0))
+                let text =  "\(self.description)\n \(self.zoomLevel)  "
+                let img = Utils.textToImage(text, size: CGSize(width: 45, height: 45), atPoint: CGPoint(x: 0, y: 0))
                 _image = img
                 return img
             }
@@ -97,7 +98,8 @@ class MapTileTexture:MapTile {
             if let tex = _texture {
                 return tex
             } else {
-                let img = Utils.textToImage(self.description, size: CGSize(width: 45, height: 45), atPoint: CGPoint(x: 0, y: 0))
+                let text =  "\(self.description)\n\(self.zoomLevel)  "
+                let img = Utils.textToImage(text, size: CGSize(width: 45, height: 45), atPoint: CGPoint(x: 0, y: 0))
                 let tex = Utils.imageToTexture(image: img)
                 _texture = tex
                 return tex

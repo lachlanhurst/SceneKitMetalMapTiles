@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Metal
 import UIKit
 
 struct GlobalMtLocation {
@@ -38,6 +39,11 @@ class MapTileMakerImage: MapTileMaker {
     }
 }
 
+class MapTileMakerTexture: MapTileMaker {
+    func newMapTile(zoomLevel: Int, xIndex: Int, yIndex: Int) -> MapTile {
+        return MapTileTexture(zoomLevel: zoomLevel, xIndex: xIndex, yIndex: yIndex)
+    }
+}
 
 class MapTile {
     var zoomLevel:Int
@@ -76,6 +82,31 @@ class MapTileImage:MapTile {
 
     var initialised:Bool {
         return _image != nil
+    }
+}
+
+class MapTileTexture:MapTile {
+    var _texture:MTLTexture? = nil
+
+    override init(zoomLevel:Int, xIndex:Int, yIndex:Int) {
+        super.init(zoomLevel: zoomLevel, xIndex: xIndex, yIndex: yIndex)
+    }
+
+    var texture:MTLTexture {
+        get {
+            if let tex = _texture {
+                return tex
+            } else {
+                let img = Utils.textToImage(self.description, size: CGSize(width: 45, height: 45), atPoint: CGPoint(x: 0, y: 0))
+                let tex = Utils.imageToTexture(image: img)
+                _texture = tex
+                return tex
+            }
+        }
+    }
+
+    var initialised:Bool {
+        return _texture != nil
     }
 }
 
@@ -139,22 +170,16 @@ class MaptileManager {
                 } else if oldXindex >= gridSize && oldYindex >= gridSize {
                     let closest = mapTiles[gridSize - 1][gridSize - 1]!
                     mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex + 1, yIndex: closest.yIndex + 1)
-
-
                 } else if oldXindex < 0 && oldYindex >= gridSize {
                     let closest = mapTiles[0][gridSize - 1]!
                     mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex - 1, yIndex: closest.yIndex + 1)
-
                 } else if oldXindex >= gridSize && oldYindex < 0 {
                     let closest = mapTiles[gridSize - 1][0]!
                     mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex + 1, yIndex: closest.yIndex - 1)
-
-
                 } else if oldXindex < 0 {
                     let closest = mapTiles[0][oldYindex]!
                     mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex - 1, yIndex: closest.yIndex)
                 } else if oldYindex < 0 {
-                    print("oldXindex = \(oldXindex)")
                     let closest = mapTiles[oldXindex][0]!
                     mt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: closest.xIndex, yIndex: closest.yIndex - 1)
                 } else if oldXindex >= gridSize {

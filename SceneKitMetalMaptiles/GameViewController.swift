@@ -21,7 +21,10 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        mtm = MaptileManager(mapTileGridSize: 15, tileMaker:MapTileMakerImage())
+        // MapTileMakerImage works, but is slower than texture
+        //mtm = MaptileManager(mapTileGridSize: 15, tileMaker:MapTileMakerImage())
+
+        mtm = MaptileManager(mapTileGridSize: 15, tileMaker:MapTileMakerTexture())
         mtm.delegate = self
         //mtm.shiftMapTiles(dX: 1, dY: 0)
 
@@ -130,16 +133,26 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         updatePlanesFromMtm(mtm: mtm)
     }
 
+    func setPlaneWith(mapTile:MapTile, plane:SCNGeometry) {
+        if let mtImage = mapTile as? MapTileImage {
+            let image = mtImage.image
+            plane.firstMaterial?.diffuse.contents = image
+        } else if let mtTexture = mapTile as? MapTileTexture {
+            let tex = mtTexture.texture
+            plane.firstMaterial?.diffuse.contents = tex
+        }
+    }
+
     func updatePlanesFromMtm(mtm:MaptileManager) {
         var count:Int = 0
         for i in 0..<mtm.gridSize {
             for j in 0..<mtm.gridSize {
-                let mt = mtm.mapTiles[j][i]! as! MapTileImage
-                let image = mt.image
 
                 let planeNode = planeRootNode.childNodes[count]
+                let plane = planeNode.geometry!
 
-                planeNode.geometry?.firstMaterial?.diffuse.contents = image
+                let mt = mtm.mapTiles[j][i]!
+                setPlaneWith(mapTile: mt, plane: plane)
 
                 count+=1
             }
@@ -153,12 +166,13 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
 
         for i in 0..<mtm.gridSize {
             for j in 0..<mtm.gridSize {
-                let mt = mtm.mapTiles[j][i]! as! MapTileImage
-                let image = mt.image
 
                 let plane = SCNPlane(width: 1, height: 1)
                 plane.firstMaterial?.locksAmbientWithDiffuse = false
-                plane.firstMaterial?.diffuse.contents = image
+
+                let mt = mtm.mapTiles[j][i]!
+                setPlaneWith(mapTile: mt, plane: plane)
+
                 plane.firstMaterial?.ambient.contents = Utils.colourForIndex(index: count)
                 let planeNode = SCNNode(geometry: plane)
                 planeNode.position = SCNVector3Make(Float(j) - Float(mtm.gridSize) / 2, Float(i) - Float(mtm.gridSize) / 2, 0)

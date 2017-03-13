@@ -10,13 +10,15 @@ import UIKit
 import QuartzCore
 import SceneKit
 
-class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRendererDelegate {
+class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRendererDelegate, UIGestureRecognizerDelegate {
 
     var mtm:MaptileManager!
 
     var planeRootNode:SCNNode!
+    var cameraNode:SCNNode!
 
     var updateLocationTo:GlobalMtLocation? = nil
+    var zoom:Float = 10
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,12 +34,12 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         let scene = SCNScene()
         
         // create and add a camera to the scene
-        let cameraNode = SCNNode()
+        cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
         scene.rootNode.addChildNode(cameraNode)
         
         // place the camera
-        cameraNode.position = SCNVector3(x: 0, y: 0, z: 10)
+        cameraNode.position = SCNVector3(x: 0, y: 0, z: zoom)
         
         // create and add a light to the scene
         let lightNode = SCNNode()
@@ -87,20 +89,29 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         scnView.addGestureRecognizer(tapGesture)
 
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        panGesture.minimumNumberOfTouches = 1
+        panGesture.maximumNumberOfTouches = 2
+        panGesture.delaysTouchesBegan = false
+        panGesture.delaysTouchesEnded = false
+        panGesture.delegate = self
         scnView.addGestureRecognizer(panGesture)
-    }
 
-    //func updateMtm
+        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
+        pinchGesture.delaysTouchesBegan = false
+        pinchGesture.delaysTouchesEnded = false
+        pinchGesture.delegate = self
+        scnView.addGestureRecognizer(pinchGesture)
+    }
 
     var beginTranslation3d = SCNVector3Zero
     func handlePan(_ recognizer: UIPanGestureRecognizer) {
-
+        print("pan")
         let scnView = self.view as! SCNView
         let transInView = recognizer.translation(in: scnView)
         let transPtIn3d = scnView.unprojectPoint(SCNVector3Make(Float(transInView.x), Float(transInView.y), 0))
         let originIn3d = scnView.unprojectPoint(SCNVector3Zero)
 
-        let transIn3d = (transPtIn3d - originIn3d) * 10 // camera z pos ???
+        let transIn3d = (transPtIn3d - originIn3d) * zoom // camera z pos ???
 
         let totalTrans3d = beginTranslation3d + transIn3d
 
@@ -117,6 +128,27 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
             //updateForNewLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
             updateLocationTo = GlobalMtLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
         }
+    }
+
+    var startZoom:Float!
+    func handlePinch(_ recognizer: UIPinchGestureRecognizer) {
+        if (recognizer.state == .began )
+        {
+            startZoom = zoom
+        } else if (recognizer.state == .ended ||
+            recognizer.state == .cancelled ||
+            recognizer.state == .failed)
+        {
+
+        } else {
+            let currentZoom = startZoom / Float(recognizer.scale)
+            zoom = currentZoom
+        }
+    }
+
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 
     func updateForNewLocation(x:Double, y:Double) {
@@ -220,6 +252,9 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
     }
 
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+
+        cameraNode.position = SCNVector3Make(cameraNode.position.x, cameraNode.position.y, zoom)
+
         if let updateLoc = updateLocationTo {
             updateForNewLocation(x:updateLoc.x, y:updateLoc.y)
             updateLocationTo = nil

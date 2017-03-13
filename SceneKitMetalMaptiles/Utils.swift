@@ -7,6 +7,8 @@
 //
 
 import Foundation
+import Metal
+import MetalKit
 import UIKit
 
 class Utils {
@@ -52,6 +54,13 @@ class Utils {
         //And pass it back up to the caller.
         return newImage
         
+    }
+
+    static func imageToTexture(image:UIImage) -> MTLTexture {
+        let device = MTLCreateSystemDefaultDevice()
+        let loader = MTKTextureLoader(device: device!)
+        let texture = try! loader.newTexture(with: image.cgImage!, options: nil)
+        return texture
     }
 
     static func colourForIndex(index:Int) -> UIColor {

@@ -15,10 +15,11 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
     var mtm:MaptileManager!
 
     var planeRootNode:SCNNode!
+    var camera:SCNCamera!
     var cameraNode:SCNNode!
 
     var updateLocationTo:GlobalMtLocation? = nil
-    var zoom:Float = 10
+    var zoom:Float = 1.0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,8 +35,10 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         let scene = SCNScene()
         
         // create and add a camera to the scene
+        camera = SCNCamera()
+        camera.usesOrthographicProjection = true
         cameraNode = SCNNode()
-        cameraNode.camera = SCNCamera()
+        cameraNode.camera = camera
         scene.rootNode.addChildNode(cameraNode)
         
         // place the camera
@@ -112,7 +115,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         let transPtIn3d = scnView.unprojectPoint(SCNVector3Make(Float(transInView.x), Float(transInView.y), 0))
         let originIn3d = scnView.unprojectPoint(SCNVector3Zero)
 
-        let transIn3d = (transPtIn3d - originIn3d) * zoom
+        let transIn3d = (transPtIn3d - originIn3d)
 
         let totalTrans3d = beginTranslation3d + transIn3d
 
@@ -144,7 +147,6 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         } else {
             let currentZoom = startZoom / Float(recognizer.scale)
             zoom = currentZoom
-            //print(zoom)
         }
     }
 
@@ -262,10 +264,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
 
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
 
-
-
-        let zoomLevel = Int(floor((1/(zoom/10)))) - 1
-        //print("zl = \(zoomLevel)")
+        let zoomLevel = Int(-1 * log(zoom) / log(2))
         mtm.zoomLevel = zoomLevel
 
         if let updateLoc = updateLocationTo {
@@ -273,7 +272,8 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
             updateLocationTo = nil
         }
 
-        cameraNode.position = SCNVector3Make(cameraNode.position.x, cameraNode.position.y, zoom)
+        //cameraNode.position = SCNVector3Make(cameraNode.position.x, cameraNode.position.y, zoom)
+        camera.orthographicScale = Double(zoom)
     }
 
     override var shouldAutorotate: Bool {

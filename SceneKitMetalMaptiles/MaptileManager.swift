@@ -150,9 +150,9 @@ class MaptileManager {
             return _globalLocation
         }
         set(newLocation) {
-            print("\(newLocation.x), \(newLocation.y)")
+            //print("\(newLocation.x), \(newLocation.y)")
             let newCentreMt = mapTileForLocation(location: newLocation, zoom: zoomLevel)
-            print(newCentreMt.description)
+            //print(newCentreMt.description)
             if newCentreMt != mapTileCentre {
                 //then grid needs update
                 let dX = newCentreMt.xIndex - mapTileCentre.xIndex
@@ -174,15 +174,37 @@ class MaptileManager {
             guard newZoomLevel != _zoomLevel else {
                 return
             }
+            let zoomIn = newZoomLevel > _zoomLevel // is the map being zoomed in
+            let beforeZoomCentre = mapTileForLocation(location: _globalLocation, zoom: zoomLevel)
+            print("before z = \(beforeZoomCentre.description)")
+
             _zoomLevel = newZoomLevel
-            print("zl = \(_zoomLevel)")
+            //print("zl = \(_zoomLevel)")
             let dZoomLevel = newZoomLevel - _zoomLevel
 
+
+
             setupMapTiles()
+            let afterZoomCentre = mapTileForLocation(location: _globalLocation, zoom: zoomLevel)
+            print("after z = \(afterZoomCentre.description)")
 
             if let delegate = self.delegate {
                 delegate.mapTilesZoomed(dZoomLevel: dZoomLevel)
             }
+
+            /*if zoomIn {
+                let expectedCentreX = beforeZoomCentre.xIndex * 2
+                let expectedCentreY = beforeZoomCentre.yIndex * 2
+
+                //let deltaExpX = afterZoomCentre.xIndex - expectedCentreX
+                //let deltaExpY = afterZoomCentre.yIndex - expectedCentreY
+                let deltaExpX = expectedCentreX - afterZoomCentre.xIndex //+ 1
+                let deltaExpY = expectedCentreY - afterZoomCentre.yIndex //+ 1
+                //print("mtc = \(self.mapTileCentre.description)")
+                print("delta zoom shoft = \(deltaExpX), \(deltaExpY)")
+                shiftMapTiles(dX: deltaExpX, dY: deltaExpY)
+                //print("mtc after = \(self.mapTileCentre.description)")
+            }*/
         }
     }
 
@@ -239,13 +261,15 @@ class MaptileManager {
         let centerMt = mapTileForLocation(location: _globalLocation, zoom: zoomLevel)
         let offset = (gridSize - 1) / 2
 
-        let startRange = centerMt.xIndex - offset
-        let endRange = centerMt.xIndex + offset
+        let startRangeX = centerMt.xIndex - offset
+        let endRangeX = centerMt.xIndex + offset
+        let startRangeY = centerMt.yIndex - offset
+        let endRangeY = centerMt.yIndex + offset
 
         var i:Int = 0
-        for x in startRange...endRange {
+        for x in startRangeX...endRangeX {
             var j:Int = 0
-            for y in startRange...endRange {
+            for y in startRangeY...endRangeY {
                 let newMt = tileMakerFactory.newMapTile(zoomLevel: zoomLevel, xIndex: x, yIndex: y)
                 mapTiles[i][j] = newMt
                 if newMt == centerMt {

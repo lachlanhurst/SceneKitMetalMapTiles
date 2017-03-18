@@ -101,6 +101,8 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         pinchGesture.delaysTouchesEnded = false
         pinchGesture.delegate = self
         scnView.addGestureRecognizer(pinchGesture)
+
+        //updateLocationTo = GlobalMtLocation(x: 0.25, y: 0.75)
     }
 
     var beginTranslation3d = SCNVector3Zero
@@ -124,7 +126,6 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
             beginTranslation3d = totalTrans3d
         } else {
 
-            //updateForNewLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
             updateLocationTo = GlobalMtLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
         }
     }
@@ -143,7 +144,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         } else {
             let currentZoom = startZoom / Float(recognizer.scale)
             zoom = currentZoom
-            print(zoom)
+            //print(zoom)
         }
     }
 
@@ -261,7 +262,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
 
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
 
-        cameraNode.position = SCNVector3Make(cameraNode.position.x, cameraNode.position.y, zoom)
+
 
         let zoomLevel = Int(floor((1/(zoom/10)))) - 1
         //print("zl = \(zoomLevel)")
@@ -271,6 +272,8 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
             updateForNewLocation(x:updateLoc.x, y:updateLoc.y)
             updateLocationTo = nil
         }
+
+        cameraNode.position = SCNVector3Make(cameraNode.position.x, cameraNode.position.y, zoom)
     }
 
     override var shouldAutorotate: Bool {

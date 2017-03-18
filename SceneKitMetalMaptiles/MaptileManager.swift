@@ -125,8 +125,8 @@ class MaptileManager {
     var mapTiles:[[MapTile?]]
     var mapTileCentre:MapTile!
 
-    var maxZoomLevel:Int = 0
-    var minZoomLevel:Int = 15
+    var maxZoomLevel:Int = 15
+    var minZoomLevel:Int = 0
 
     var tileMakerFactory:MapTileMaker
 
@@ -168,6 +168,9 @@ class MaptileManager {
             return _zoomLevel
         }
         set(newZoomLevel) {
+            guard newZoomLevel >= minZoomLevel && newZoomLevel <= maxZoomLevel else {
+                return
+            }
             guard newZoomLevel != _zoomLevel else {
                 return
             }

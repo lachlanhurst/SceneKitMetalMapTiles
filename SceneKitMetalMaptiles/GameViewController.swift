@@ -27,7 +27,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         // MapTileMakerImage works, but is slower than texture
         //mtm = MaptileManager(mapTileGridSize: 15, tileMaker:MapTileMakerImage())
 
-        mtm = MaptileManager(mapTileGridSize: 15, tileMaker:MapTileMakerTexture())
+        mtm = MaptileManager(mapTileGridSize: 7, tileMaker:MapTileMakerTexture())
         mtm.delegate = self
         //mtm.shiftMapTiles(dX: 1, dY: 0)
 
@@ -156,10 +156,9 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
     }
 
     func updateForNewLocation(x:Double, y:Double) {
-
         mtm.globalLocation = GlobalMtLocation(x: x, y: y)
-        let dXf = Float(mtm.mapTileCentre.xIndex) * mtm.mapTileGlobalSize
-        let dYf = Float(mtm.mapTileCentre.yIndex) * mtm.mapTileGlobalSize
+        let dXf = Float(mtm.mapTileCentre.xIndex+1) * mtm.mapTileGlobalSize
+        let dYf = Float(mtm.mapTileCentre.yIndex+1) * mtm.mapTileGlobalSize
 
         let position = SCNVector3Make(Float(x) - dXf, Float(y) - dYf, 0) * -1.0
         planeRootNode.position = position
@@ -169,6 +168,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         let scale = mtm.mapTileGlobalSize
         planeRootNode.scale = SCNVector3Make(scale, scale, scale)
         updatePlanesFromMtm(mtm: mtm)
+        updateForNewLocation(x: self.mtm.globalLocation.x, y: self.mtm.globalLocation.y)
     }
 
     func mapTilesShifted(dX: Int, dY: Int) {
@@ -273,7 +273,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         }
 
         //cameraNode.position = SCNVector3Make(cameraNode.position.x, cameraNode.position.y, zoom)
-        camera.orthographicScale = Double(zoom)
+        camera.orthographicScale = Double(zoom) * 3
     }
 
     override var shouldAutorotate: Bool {

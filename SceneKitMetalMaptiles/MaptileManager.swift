@@ -191,7 +191,7 @@ class MaptileManager {
             if let delegate = self.delegate {
                 delegate.mapTilesZoomed(dZoomLevel: dZoomLevel)
             }
-
+            //shiftMapTiles(dX: 1, dY: 1)
             /*if zoomIn {
                 let expectedCentreX = beforeZoomCentre.xIndex * 2
                 let expectedCentreY = beforeZoomCentre.yIndex * 2

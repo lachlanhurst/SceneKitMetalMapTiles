@@ -114,13 +114,19 @@ class MapTileTexture:MapTile {
 
 protocol MapTileManagerDelegate: class {
     func mapTilesShifted(dX:Int, dY:Int)
+    func mapTilesZoomed(dZoomLevel:Int)
 }
 
 class MaptileManager {
-    var zoomLevel:Int
+    var _zoomLevel:Int
+
+
     var gridSize:Int
     var mapTiles:[[MapTile?]]
     var mapTileCentre:MapTile!
+
+    var maxZoomLevel:Int = 0
+    var minZoomLevel:Int = 15
 
     var tileMakerFactory:MapTileMaker
 
@@ -131,7 +137,7 @@ class MaptileManager {
     init(mapTileGridSize:Int, tileMaker:MapTileMaker) {
         assert(mapTileGridSize % 2 == 1, "mapTileGridSize must be odd number")
 
-        zoomLevel = 0
+        _zoomLevel = 0
         gridSize = mapTileGridSize
         _globalLocation = GlobalMtLocation(x: 0.5, y: 0.5)
         mapTiles = Array(repeating:Array(repeating:nil, count:gridSize), count:gridSize)
@@ -144,8 +150,9 @@ class MaptileManager {
             return _globalLocation
         }
         set(newLocation) {
+            print("\(newLocation.x), \(newLocation.y)")
             let newCentreMt = mapTileForLocation(location: newLocation, zoom: zoomLevel)
-            //print(newCentreMt.description)
+            print(newCentreMt.description)
             if newCentreMt != mapTileCentre {
                 //then grid needs update
                 let dX = newCentreMt.xIndex - mapTileCentre.xIndex
@@ -153,6 +160,26 @@ class MaptileManager {
                 shiftMapTiles(dX: dX, dY: dY)
             }
             _globalLocation = newLocation
+        }
+    }
+
+    var zoomLevel:Int {
+        get {
+            return _zoomLevel
+        }
+        set(newZoomLevel) {
+            guard newZoomLevel != _zoomLevel else {
+                return
+            }
+            _zoomLevel = newZoomLevel
+            print("zl = \(_zoomLevel)")
+            let dZoomLevel = newZoomLevel - _zoomLevel
+
+            setupMapTiles()
+
+            if let delegate = self.delegate {
+                delegate.mapTilesZoomed(dZoomLevel: dZoomLevel)
+            }
         }
     }
 

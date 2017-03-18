@@ -105,13 +105,12 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
 
     var beginTranslation3d = SCNVector3Zero
     func handlePan(_ recognizer: UIPanGestureRecognizer) {
-        print("pan")
         let scnView = self.view as! SCNView
         let transInView = recognizer.translation(in: scnView)
         let transPtIn3d = scnView.unprojectPoint(SCNVector3Make(Float(transInView.x), Float(transInView.y), 0))
         let originIn3d = scnView.unprojectPoint(SCNVector3Zero)
 
-        let transIn3d = (transPtIn3d - originIn3d) * zoom // camera z pos ???
+        let transIn3d = (transPtIn3d - originIn3d) * zoom
 
         let totalTrans3d = beginTranslation3d + transIn3d
 
@@ -131,6 +130,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
     }
 
     var startZoom:Float!
+    var startZoomFactor:Float!
     func handlePinch(_ recognizer: UIPinchGestureRecognizer) {
         if (recognizer.state == .began )
         {
@@ -143,6 +143,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         } else {
             let currentZoom = startZoom / Float(recognizer.scale)
             zoom = currentZoom
+            print(zoom)
         }
     }
 
@@ -157,7 +158,14 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         let dXf = Float(mtm.mapTileCentre.xIndex) * mtm.mapTileGlobalSize
         let dYf = Float(mtm.mapTileCentre.yIndex) * mtm.mapTileGlobalSize
 
-        planeRootNode.position = SCNVector3Make(Float(x) - dXf, Float(y) - dYf, 0) * -1.0
+        let position = SCNVector3Make(Float(x) - dXf, Float(y) - dYf, 0) * -1.0
+        planeRootNode.position = position
+    }
+
+    func mapTilesZoomed(dZoomLevel: Int) {
+        let scale = mtm.mapTileGlobalSize
+        planeRootNode.scale = SCNVector3Make(scale, scale, scale)
+        updatePlanesFromMtm(mtm: mtm)
     }
 
     func mapTilesShifted(dX: Int, dY: Int) {
@@ -254,6 +262,10 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
 
         cameraNode.position = SCNVector3Make(cameraNode.position.x, cameraNode.position.y, zoom)
+
+        let zoomLevel = Int(floor((1/(zoom/10)))) - 1
+        //print("zl = \(zoomLevel)")
+        mtm.zoomLevel = zoomLevel
 
         if let updateLoc = updateLocationTo {
             updateForNewLocation(x:updateLoc.x, y:updateLoc.y)

@@ -13,6 +13,7 @@ import SceneKit
 class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRendererDelegate, UIGestureRecognizerDelegate {
 
     var mtm:MaptileManager!
+    var mtis:MaptileImageSource!
 
     var planeRootNode:SCNNode!
     var camera:SCNCamera!
@@ -27,9 +28,11 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         // MapTileMakerImage works, but is slower than texture
         //mtm = MaptileManager(mapTileGridSize: 15, tileMaker:MapTileMakerImage())
 
-        mtm = MaptileManager(mapTileGridSize: 7, tileMaker:MapTileMakerTexture())
+        mtm = MaptileManager(mapTileGridSize: 5, tileMaker:MapTileMakerTexture())
         mtm.delegate = self
         //mtm.shiftMapTiles(dX: 1, dY: 0)
+
+        mtis = StamenMapsImageSource()
 
         // create a new scene
         let scene = SCNScene()
@@ -105,10 +108,11 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         pinchGesture.delegate = self
         scnView.addGestureRecognizer(pinchGesture)
 
-        //updateLocationTo = GlobalMtLocation(x: 0.25, y: 0.75)
+        updateLocationTo = GlobalMtLocation(x: 0.5, y: 0.5)
+        updateForNewLocation(x: updateLocationTo!.x, y: updateLocationTo!.y)
     }
 
-    var beginTranslation3d = SCNVector3Zero
+    var beginTranslation3d = SCNVector3Make(0.5, 0.5, 0)
     func handlePan(_ recognizer: UIPanGestureRecognizer) {
         let scnView = self.view as! SCNView
         let transInView = recognizer.translation(in: scnView)
@@ -121,12 +125,12 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
 
         if (recognizer.state == .began )
         {
-
+            beginTranslation3d = totalTrans3d
         } else if (recognizer.state == .ended ||
             recognizer.state == .cancelled ||
             recognizer.state == .failed)
         {
-            beginTranslation3d = totalTrans3d
+
         } else {
 
             updateLocationTo = GlobalMtLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
@@ -157,8 +161,13 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
 
     func updateForNewLocation(x:Double, y:Double) {
         mtm.globalLocation = GlobalMtLocation(x: x, y: y)
+        // zooming in drops to top left tile (eg; TMS)
         let dXf = Float(mtm.mapTileCentre.xIndex+1) * mtm.mapTileGlobalSize
-        let dYf = Float(mtm.mapTileCentre.yIndex+1) * mtm.mapTileGlobalSize
+        let dYf = Float(mtm.mapTileCentre.yIndex) * mtm.mapTileGlobalSize
+
+        // zooming in drops to bottom left tile
+        //let dXf = Float(mtm.mapTileCentre.xIndex+1) * mtm.mapTileGlobalSize
+        //let dYf = Float(mtm.mapTileCentre.yIndex+1) * mtm.mapTileGlobalSize
 
         let position = SCNVector3Make(Float(x) - dXf, Float(y) - dYf, 0) * -1.0
         planeRootNode.position = position
@@ -172,7 +181,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
     }
 
     func mapTilesShifted(dX: Int, dY: Int) {
-        //print("shifting by \(dX), \(dY)")
+        print("shifting by \(dX), \(dY)")
         updatePlanesFromMtm(mtm: mtm)
     }
 
@@ -181,6 +190,11 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
             let image = mtImage.image
             plane.firstMaterial?.diffuse.contents = image
         } else if let mtTexture = mapTile as? MapTileTexture {
+
+            if !mtTexture.initialised && mtis.isWithinBounds(mapTile: mtTexture) {
+                mtis.requestMaptile(maptile: mtTexture, imageType: .diffuse, progress: nil, complete: self.maptileImageRecieved)
+            }
+
             let tex = mtTexture.texture
             plane.firstMaterial?.diffuse.contents = tex
         }
@@ -195,7 +209,34 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
                 let plane = planeNode.geometry!
 
                 let mt = mtm.mapTiles[j][i]!
+
                 setPlaneWith(mapTile: mt, plane: plane)
+
+                count+=1
+            }
+        }
+    }
+
+    func maptileImageRecieved(maptile:MapTile,
+                              imageType:MaptileImageType,
+                              image:UIImage) {
+        var count:Int = 0
+        for i in 0..<mtm.gridSize {
+            for j in 0..<mtm.gridSize {
+                let mt = mtm.mapTiles[j][i]!
+
+                if mt == maptile {
+                    let mtx = mt as! MapTileTexture
+                    let texture = Utils.imageToTexture(image: image)
+                    mtx.texture = texture
+
+                    let planeNode = planeRootNode.childNodes[count]
+                    let plane = planeNode.geometry!
+
+
+                    setPlaneWith(mapTile: mt, plane: plane)
+
+                }
 
                 count+=1
             }

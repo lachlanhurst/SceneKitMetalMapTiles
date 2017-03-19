@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		735E188F1E7D460C0084FDD8 /* MaptileImageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735E188E1E7D460C0084FDD8 /* MaptileImageSource.swift */; };
 		73A5320D1E73BE6D00EEC692 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A5320C1E73BE6D00EEC692 /* AppDelegate.swift */; };
 		73A5320F1E73BE6D00EEC692 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 73A5320E1E73BE6D00EEC692 /* art.scnassets */; };
 		73A532111E73BE6D00EEC692 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A532101E73BE6D00EEC692 /* GameViewController.swift */; };
@@ -32,6 +33,7 @@
 
 /* Begin PBXFileReference section */
 		0B87C4A0D0FEC745E0C69109 /* Pods-SceneKitMetalMaptiles.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SceneKitMetalMaptiles.debug.xcconfig"; path = "Pods/Target Support Files/Pods-SceneKitMetalMaptiles/Pods-SceneKitMetalMaptiles.debug.xcconfig"; sourceTree = "<group>"; };
+		735E188E1E7D460C0084FDD8 /* MaptileImageSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MaptileImageSource.swift; sourceTree = "<group>"; };
 		73A532091E73BE6D00EEC692 /* SceneKitMetalMaptiles.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SceneKitMetalMaptiles.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		73A5320C1E73BE6D00EEC692 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		73A5320E1E73BE6D00EEC692 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
@@ -111,6 +113,7 @@
 				73A5322E1E73C08900EEC692 /* MaptileManager.swift */,
 				73A532301E743EDD00EEC692 /* Utils.swift */,
 				73A532321E74C19900EEC692 /* SCNVector3Extensions.swift */,
+				735E188E1E7D460C0084FDD8 /* MaptileImageSource.swift */,
 			);
 			path = SceneKitMetalMaptiles;
 			sourceTree = "<group>";
@@ -292,6 +295,7 @@
 				73A532111E73BE6D00EEC692 /* GameViewController.swift in Sources */,
 				73A5320D1E73BE6D00EEC692 /* AppDelegate.swift in Sources */,
 				73A5322F1E73C08900EEC692 /* MaptileManager.swift in Sources */,
+				735E188F1E7D460C0084FDD8 /* MaptileImageSource.swift in Sources */,
 				73A532311E743EDD00EEC692 /* Utils.swift in Sources */,
 				73A532331E74C19900EEC692 /* SCNVector3Extensions.swift in Sources */,
 			);
@@ -505,6 +509,7 @@
 				73A5322A1E73BE6D00EEC692 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		73A5322B1E73BE6D00EEC692 /* Build configuration list for PBXNativeTarget "SceneKitMetalMaptilesTests" */ = {
 			isa = XCConfigurationList;
@@ -513,6 +518,7 @@
 				73A5322D1E73BE6D00EEC692 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

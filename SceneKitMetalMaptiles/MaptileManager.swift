@@ -57,7 +57,7 @@ class MapTile {
     }
 
     public var description: String {
-        return "\(xIndex),\(yIndex)"
+        return "\(xIndex),\(-1 * yIndex)"
     }
 }
 
@@ -105,6 +105,9 @@ class MapTileTexture:MapTile {
                 return tex
             }
         }
+        set(newTexture) {
+            _texture = newTexture
+        }
     }
 
     var initialised:Bool {
@@ -127,6 +130,8 @@ class MaptileManager {
 
     var maxZoomLevel:Int = 15
     var minZoomLevel:Int = 0
+
+    var invert = true
 
     var tileMakerFactory:MapTileMaker
 
@@ -174,37 +179,15 @@ class MaptileManager {
             guard newZoomLevel != _zoomLevel else {
                 return
             }
-            let zoomIn = newZoomLevel > _zoomLevel // is the map being zoomed in
-            let beforeZoomCentre = mapTileForLocation(location: _globalLocation, zoom: zoomLevel)
-            print("before z = \(beforeZoomCentre.description)")
 
             _zoomLevel = newZoomLevel
-            //print("zl = \(_zoomLevel)")
             let dZoomLevel = newZoomLevel - _zoomLevel
 
-
-
             setupMapTiles()
-            let afterZoomCentre = mapTileForLocation(location: _globalLocation, zoom: zoomLevel)
-            print("after z = \(afterZoomCentre.description)")
 
             if let delegate = self.delegate {
                 delegate.mapTilesZoomed(dZoomLevel: dZoomLevel)
             }
-            //shiftMapTiles(dX: 1, dY: 1)
-            /*if zoomIn {
-                let expectedCentreX = beforeZoomCentre.xIndex * 2
-                let expectedCentreY = beforeZoomCentre.yIndex * 2
-
-                //let deltaExpX = afterZoomCentre.xIndex - expectedCentreX
-                //let deltaExpY = afterZoomCentre.yIndex - expectedCentreY
-                let deltaExpX = expectedCentreX - afterZoomCentre.xIndex //+ 1
-                let deltaExpY = expectedCentreY - afterZoomCentre.yIndex //+ 1
-                //print("mtc = \(self.mapTileCentre.description)")
-                print("delta zoom shoft = \(deltaExpX), \(deltaExpY)")
-                shiftMapTiles(dX: deltaExpX, dY: deltaExpY)
-                //print("mtc after = \(self.mapTileCentre.description)")
-            }*/
         }
     }
 

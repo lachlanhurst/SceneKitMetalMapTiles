@@ -119,7 +119,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         let transPtIn3d = scnView.unprojectPoint(SCNVector3Make(Float(transInView.x), Float(transInView.y), 0))
         let originIn3d = scnView.unprojectPoint(SCNVector3Zero)
 
-        let transIn3d = (transPtIn3d - originIn3d)
+        let transIn3d = (originIn3d - transPtIn3d)
 
         let totalTrans3d = beginTranslation3d + transIn3d
 
@@ -130,10 +130,10 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
             recognizer.state == .cancelled ||
             recognizer.state == .failed)
         {
-
+            beginTranslation3d = totalTrans3d
         } else {
 
-            updateLocationTo = GlobalMtLocation(x: Double(-1 * totalTrans3d.x), y: Double(-1 * totalTrans3d.y))
+            updateLocationTo = GlobalMtLocation(x: Double(totalTrans3d.x), y: Double(totalTrans3d.y))
         }
     }
 
@@ -170,6 +170,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         //let dYf = Float(mtm.mapTileCentre.yIndex+1) * mtm.mapTileGlobalSize
 
         let position = SCNVector3Make(Float(x) - dXf, Float(y) - dYf, 0) * -1.0
+
         planeRootNode.position = position
     }
 
@@ -314,7 +315,7 @@ class GameViewController: UIViewController, MapTileManagerDelegate, SCNSceneRend
         }
 
         //cameraNode.position = SCNVector3Make(cameraNode.position.x, cameraNode.position.y, zoom)
-        camera.orthographicScale = Double(zoom) * 3
+        camera.orthographicScale = Double(zoom)
     }
 
     override var shouldAutorotate: Bool {
